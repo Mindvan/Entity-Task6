@@ -13,35 +13,29 @@ namespace HelloApp
             using (ApplicationContext db = new ApplicationContext())
             {
                
-                string[] parsed_command;
+                string[] textInput;
                 while (true) {
                     Console.WriteLine("Please type the command like this:");
-                    Console.WriteLine("if add - add [login] [password] [name] [age]");
+                    Console.WriteLine("if insert - add [login] [password] [name] [age]");
                     Console.WriteLine("if remove - remove [login]");
                     Console.WriteLine("if display - display\n");
-                    parsed_command = Console.ReadLine().Split();
-                    if (parsed_command[0] == "add")
+                    textInput = Console.ReadLine().Split();
+                    if (textInput[0].ToLower() == "insert")
                     {
-                        string login = parsed_command[1];
-                        string password = parsed_command[2];
-                        string name = parsed_command[3].ToString();
-                        int age = Int32.Parse(parsed_command[4]);
-                        addUser(login, password, name, age);
+                        string login = textInput[1];
+                        string password = textInput[2];
+                        string name = textInput[3].ToString();
+                        int age = Int32.Parse(textInput[4]);
+                        Insert(login, password, name, age);
                     }
-                    else if (parsed_command[0] == "remove")
+                    else if (textInput[0].ToLower() == "remove")
                     {
-                        string login = parsed_command[1];
-                        removeUser(login);
+                        string login = textInput[1];
+                        Remove(login);
                     }
-                    else if (parsed_command[0] == "editAge")
+                    else if (textInput[0].ToLower() == "display")
                     {
-                        string login = parsed_command[1];
-                        int age = Int32.Parse(parsed_command[2]);
-                        editAge(login, age);
-                    }
-                    else if (parsed_command[0] == "display")
-                    {
-                        DisplayUsers();
+                        Display();
                     }
                     else {
                         Console.WriteLine("\nYour command was incorrent, please try again\n");
@@ -51,24 +45,24 @@ namespace HelloApp
             }
         }
 
-        public static void addUser(string login, string password, string name, int age)
+        public static void Insert(string login, string password, string name, int age)
         {
             using (ApplicationContext db = new ApplicationContext())
             {
                 User user = new User { Login = login, Password = GetMD5(password), Name = name, Age = age };
-                if (getUser(login) is null)
+                if (GetData(login) is null)
                 {
                     db.Users.Add(user);
                     db.SaveChanges();
-                    Console.WriteLine("Insertion was successful");
+                    Console.WriteLine("Insertion was successful.\n");
                 }
                 else {
-                    Console.WriteLine("A user with this login has already been added.");
+                    Console.WriteLine("This login has already been added.\n");
                 }
             }
         }
 
-        public static User getUser(string login)
+        public static User GetData(string login)
         {
             using (ApplicationContext db = new ApplicationContext())
             {
@@ -80,48 +74,34 @@ namespace HelloApp
             }
         }
 
-        public static void DisplayUsers()
+        public static void Display()
         {
             using (ApplicationContext db = new ApplicationContext())
             {
                 var user_query = db.Users;
                 foreach (User user in user_query)
-                    Console.WriteLine($"{user.Login}, {user.Password}, {user.Name},  {user.Age}");
+                    Console.WriteLine($"OUTPUT: {user.Login} | {user.Password} | {user.Name} | {user.Age}");
+                Console.WriteLine("\n");
             }
         }
 
-        public static void editAge(string login, int age) // изменить возраст
+        public static void Remove(string login) // удалить элемент
         {
             using (ApplicationContext db = new ApplicationContext())
             {
-                User user = getUser(login);
-                if (user is null)
-                {
-                    Console.WriteLine("There is no such login in the database.");
-                }
-                else {
-                    user.Age = age;
-                    db.SaveChanges();
-                    Console.WriteLine("The edit was successful.");
-                }
-
-            }
-        }
-
-        public static void removeUser(string login) // удалить элемент
-        {
-            using (ApplicationContext db = new ApplicationContext())
-            {
-                User user = getUser(login);
+                User user = GetData(login);
                 if (user is not null)
                 {
                     db.Users.Remove(user);
                     db.SaveChanges();
-                    Console.WriteLine("The removal was successful.");
+                    Console.WriteLine("The removal was successful.\n");
+                } else
+                {
+                    Console.WriteLine("The login does not exist.\n");
                 }
             }
         }
-        static string GetMD5(string password) // шифрование
+        static string GetMD5(string password) // хэширование
         {
             byte[] hash = Encoding.ASCII.GetBytes(password);
             MD5 md5 = new MD5CryptoServiceProvider();
